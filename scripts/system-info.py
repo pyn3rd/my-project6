@@ -14,12 +14,17 @@ import gradio as gr
 import psutil
 import transformers
 
-try:
-    from modules import paths, script_callbacks, sd_hijack, sd_models, sd_samplers, shared, extensions
-except (AssertionError, ImportError):
-    extensions = None
-    from modules import paths, script_callbacks, sd_hijack, sd_models, sd_samplers, shared
+from modules import paths, script_callbacks, sd_hijack, sd_models, sd_samplers, shared
 from modules.ui_components import FormRow
+
+extensions = None
+try:
+    import importlib
+    # 尝试导入 extensions 模块
+    extensions_module = importlib.import_module('modules.extensions')
+    extensions = extensions_module
+except (AssertionError, ImportError, AttributeError, Exception):
+    extensions = None
 
 from scripts.benchmark import run_benchmark, submit_benchmark # pylint: disable=E0401,E0611
 import os
