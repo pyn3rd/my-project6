@@ -14,7 +14,11 @@ import gradio as gr
 import psutil
 import transformers
 
-from modules import paths, script_callbacks, sd_hijack, sd_models, sd_samplers, shared, extensions
+try:
+    from modules import paths, script_callbacks, sd_hijack, sd_models, sd_samplers, shared, extensions
+except (AssertionError, ImportError):
+    extensions = None
+    from modules import paths, script_callbacks, sd_hijack, sd_models, sd_samplers, shared
 from modules.ui_components import FormRow
 
 from scripts.benchmark import run_benchmark, submit_benchmark # pylint: disable=E0401,E0611
@@ -252,16 +256,23 @@ def get_samplers():
 
 
 def get_extensions():
-    return sorted([f"{e.name} ({'enabled' if e.enabled else 'disabled'}{' builtin' if e.is_builtin else ''})" for e in extensions.extensions])
+    try:
+        if extensions is None:
+            return []
+        return sorted([f"{e.name} ({'enabled' if e.enabled else 'disabled'}{' builtin' if e.is_builtin else ''})" for e in extensions.extensions])
+    except (AssertionError, AttributeError, ImportError):
+        return []
 
 
 def get_loras():
     loras = []
     try:
+        if extensions is None:
+            return []
         sys.path.append(extensions.extensions_builtin_dir)
         from Lora import lora # pylint: disable=E0401
         loras = sorted([l for l in lora.available_loras.keys()])
-    except:
+    except (AssertionError, AttributeError, ImportError):
         pass
     return loras
 
