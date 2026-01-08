@@ -14,8 +14,25 @@ import gradio as gr
 import psutil
 import transformers
 
-from modules import paths, script_callbacks, sd_hijack, sd_models, sd_samplers, shared
-from modules.ui_components import FormRow
+# 安全导入 modules，捕获所有可能的 AssertionError
+try:
+    from modules import paths, script_callbacks, sd_hijack, sd_models, sd_samplers, shared
+except (AssertionError, ImportError, Exception) as e:
+    # 如果导入失败，尝试单独导入每个模块
+    try:
+        import modules.paths as paths
+        import modules.script_callbacks as script_callbacks
+        import modules.sd_hijack as sd_hijack
+        import modules.sd_models as sd_models
+        import modules.sd_samplers as sd_samplers
+        import modules.shared as shared
+    except:
+        raise e
+
+try:
+    from modules.ui_components import FormRow
+except (AssertionError, ImportError, Exception):
+    FormRow = None
 
 extensions = None
 try:
@@ -356,7 +373,10 @@ def refresh_info_full():
 ### ui definition
 
 def on_ui_tabs():
-    get_full_data()
+    try:
+        get_full_data()
+    except (AssertionError, Exception):
+        pass
     with gr.Blocks(analytics_enabled = False) as system_info:
         with gr.Row(elem_id = 'system_info'):
             with gr.Column(scale = 9):
@@ -559,4 +579,7 @@ def bench_refresh():
     return gr.HTML.update(value = bench_text)
 
 
-script_callbacks.on_ui_tabs(on_ui_tabs)
+try:
+    script_callbacks.on_ui_tabs(on_ui_tabs)
+except (AssertionError, AttributeError, Exception):
+    pass
